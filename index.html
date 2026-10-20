@@ -25,14 +25,14 @@
 <main>
 <div class="headrow"><div><h1>Trading Dashboard</h1><div class="sub" id="todayLabel"></div></div><span class="pill">● บันทึกอัตโนมัติในเครื่องนี้</span></div>
 <div class="cards">
-<div class="card"><div class="sub">Net P/L (ที่บันทึก)</div><div class="metric" id="net">฿0.00</div><div class="sub" id="plCount">0 ออเดอร์</div></div>
+<div class="card"><div class="sub">Net P/L (ที่บันทึก)</div><div class="metric" id="net">$0.00</div><div class="sub" id="plCount">0 ออเดอร์</div></div>
 <div class="card"><div class="sub">Win Rate</div><div class="metric neutral" id="winrate">0%</div><div class="sub" id="wl">ชนะ 0 · แพ้ 0</div></div>
 <div class="card"><div class="sub">จำนวนออเดอร์</div><div class="metric" id="total">0</div><div class="sub" id="closed">ปิดแล้ว 0</div></div>
 <div class="card"><div class="sub">Profit Factor</div><div class="metric" id="pf">—</div><div class="sub">กำไรรวม ÷ ขาดทุนรวม</div></div>
 </div>
 <div class="section">
 <div class="panel"><h2>ผลลัพธ์ตามเทคนิค</h2><div id="techChart"><div class="empty">ยังไม่มีข้อมูล — เริ่มบันทึกออเดอร์แรกได้เลยค่ะ</div></div></div>
-<div class="panel"><h2>สรุปวินัยการเทรด</h2><div class="barrow"><span>ชนะ</span><div class="barbg"><div class="bar" id="winBar" style="width:0%"></div></div><b id="winN">0</b></div><div class="barrow"><span>แพ้</span><div class="barbg"><div class="bar red" id="lossBar" style="width:0%"></div></div><b id="lossN">0</b></div><div class="barrow"><span>BE / เสมอ</span><div class="barbg"><div class="bar" id="beBar" style="width:0%;background:var(--gold)"></div></div><b id="beN">0</b></div><div class="sub" id="bestTech">เทคนิคที่ผลงานดีที่สุด: —</div><div class="sub" style="margin-top:8px">หมายเหตุ: สถิติ P/L ใช้ค่ากำไร/ขาดทุนที่กรอกจริง ไม่คำนวณจาก Lot/TP/SL โดยอัตโนมัติ</div></div>
+<div class="panel"><h2>สรุปวินัยการเทรด</h2><div class="barrow"><span>ชนะ</span><div class="barbg"><div class="bar" id="winBar" style="width:0%"></div></div><b id="winN">0</b></div><div class="barrow"><span>แพ้</span><div class="barbg"><div class="bar red" id="lossBar" style="width:0%"></div></div><b id="lossN">0</b></div><div class="sub" id="bestTech">เทคนิคที่ผลงานดีที่สุด: —</div><div class="sub" style="margin-top:8px">หมายเหตุ: สถิติ P/L ใช้ค่ากำไร/ขาดทุนที่กรอกจริง ไม่คำนวณจาก Lot/TP/SL โดยอัตโนมัติ</div></div>
 </div>
 <div class="filters date-filters" aria-label="ตัวกรองวันที่">
 <select id="datePreset" aria-label="ช่วงวันที่">
@@ -79,7 +79,7 @@ function dbGet(key){return new Promise((resolve,reject)=>{const r=db.transaction
 function dbSet(key,value){return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).put(value,key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})}
 function applyTheme(v){document.body.dataset.theme=v;try{localStorage.setItem('tradeJournal_theme',v)}catch(e){}}
 const $=id=>document.getElementById(id);
-const money=n=>new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB',maximumFractionDigits:2}).format(n||0);
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(n||0);
 const num=n=>Number(n)||0;const fmtDate=s=>{if(!s)return '—';const d=new Date(s);return d.toLocaleString('th-TH',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});};
 async function load(){try{await openDB();let saved=await dbGet('trades');let legacy=[];try{legacy=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){legacy=[]}if(!Array.isArray(saved))saved=[];if(legacy.length){const seen=new Set(saved.map(t=>t.id));const merged=[...saved,...legacy.filter(t=>!t.id||!seen.has(t.id))];if(merged.length!==saved.length){saved=merged;await dbSet('trades',saved)}try{localStorage.removeItem(KEY)}catch(e){}}trades=saved}catch(e){console.error('Trade Journal load failed:',e);try{trades=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_){trades=[]}toast('เปิดฐานข้อมูลในเครื่องไม่ได้ ข้อมูลเดิมอาจยังอยู่ในเบราว์เซอร์')} $('todayLabel').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});render()}
 async function save(){try{if(!db)await openDB();await dbSet('trades',trades);return true}catch(e){console.error('Trade Journal save failed:',e);let msg='บันทึกไม่สำเร็จ';if(e&&(/QuotaExceeded|quota/i.test(String(e.name)+' '+String(e.message))))msg+=': พื้นที่จัดเก็บเต็ม';else if(e&&(/InvalidState|NotFound|object store/i.test(String(e.name)+' '+String(e.message))))msg+=': ฐานข้อมูลในเครื่องมีปัญหา กรุณาปิดแล้วเปิดไฟล์ใหม่';else msg+=': '+(e?.message||'ไม่สามารถเขียนฐานข้อมูลได้');toast(msg);return false}}
@@ -108,7 +108,7 @@ function getFilteredTrades(){
 }
 function closedTrades(list=trades){return list.filter(t=>t.result==='Win'||t.result==='Loss'||t.result==='BE')}
 function render(){
- const list=getFilteredTrades(),closed=closedTrades(list),wins=closed.filter(t=>t.result==='Win'),losses=closed.filter(t=>t.result==='Loss'),bes=closed.filter(t=>t.result==='BE');
+ const list=getFilteredTrades(),closed=closedTrades(list),wins=closed.filter(t=>t.result==='Win'),losses=closed.filter(t=>t.result==='Loss');
  const net=closed.reduce((a,t)=>a+num(t.pnl),0),gp=wins.reduce((a,t)=>a+Math.max(0,num(t.pnl)),0),gl=Math.abs(losses.reduce((a,t)=>a+Math.min(0,num(t.pnl)),0));
  $('net').textContent=money(net);$('net').className='metric '+(net>0?'positive':net<0?'negative':'');
  $('plCount').textContent=`กำไรรวม ${money(gp)} · ขาดทุนรวม ${money(gl)}`;
@@ -118,8 +118,8 @@ function render(){
  $('closed').textContent=`ปิดแล้ว ${closed.length} · เปิดอยู่ ${list.filter(t=>t.result==='Open').length}`;
  $('pf').textContent=gl?(gp/gl).toFixed(2):gp?'∞':'—';
  const n=closed.length||1;
- $('winBar').style.width=wins.length/n*100+'%';$('lossBar').style.width=losses.length/n*100+'%';$('beBar').style.width=bes.length/n*100+'%';
- $('winN').textContent=wins.length;$('lossN').textContent=losses.length;$('beN').textContent=bes.length;
+ $('winBar').style.width=wins.length/n*100+'%';$('lossBar').style.width=losses.length/n*100+'%';
+ $('winN').textContent=wins.length;$('lossN').textContent=losses.length;
  const groups={};closed.forEach(t=>{let k=techniqueLabel(t.technique||'ไม่ระบุ');(groups[k]??=[]).push(t)});
  const techs=Object.entries(groups).map(([name,arr])=>({name,arr,pnl:arr.reduce((s,t)=>s+num(t.pnl),0),wr:arr.filter(t=>t.result==='Win').length/arr.length*100})).sort((a,b)=>b.pnl-a.pnl);
  $('bestTech').textContent='เทคนิคที่ผลงานดีที่สุดตาม P/L: '+(techs.length?techs[0].name+' ('+money(techs[0].pnl)+')':'—');
